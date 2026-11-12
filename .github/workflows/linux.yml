@@ -75,7 +75,9 @@ jobs:
     environment:
       name: ci-debounce
       deployment: false
-    runs-on: ubuntu-24.04
+    # Pull requests from forks run on GitHub's runners, everything else on
+    # the self-hosted ones (docs/dev/tooling.md "Runners").
+    runs-on: ${{ (github.event.pull_request && github.event.pull_request.head.repo.full_name != github.repository) && 'ubuntu-24.04' || fromJSON('["public", "Linux", "X64"]') }}
     timeout-minutes: 45
     env:
       # Wry embeds GTK 3 web views in X11 child windows. Mesa's software
@@ -105,7 +107,10 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      # A self-hosted runner keeps its build directory between jobs, which the
+      # cache would only download again.
       - name: Cache Cargo
+        if: runner.environment == 'github-hosted'
         uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
@@ -140,7 +145,9 @@ jobs:
       name: ci-debounce
       deployment: false
     # 24.04 has GTK 4.14 and Pango 1.52+, what `nsh-platform-linux` needs.
-    runs-on: ubuntu-24.04
+    # Pull requests from forks run on GitHub's runners, everything else on
+    # the self-hosted ones (docs/dev/tooling.md "Runners").
+    runs-on: ${{ (github.event.pull_request && github.event.pull_request.head.repo.full_name != github.repository) && 'ubuntu-24.04' || fromJSON('["public", "Linux", "X64"]') }}
     steps:
       - uses: actions/checkout@v4
 
