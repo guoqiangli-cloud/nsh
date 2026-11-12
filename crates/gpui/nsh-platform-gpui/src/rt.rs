@@ -97,6 +97,18 @@ pub(crate) fn after_ms(ms: u64, f: impl FnOnce() + 'static) {
     .detach();
 }
 
+/// Runs `f` on this (main) thread soon, outside any GPUI update: for
+/// native calls the system answers at once with callbacks into GPUI's
+/// windows (moving a window), which fail while an update holds the app.
+pub(crate) fn soon(f: impl FnOnce() + 'static) {
+    let app = APP.with(|a| a.borrow().clone());
+    let Some(app) = app else {
+        f();
+        return;
+    };
+    app.foreground_executor().spawn(async move { f() }).detach();
+}
+
 /// Runs `f` with the app on this (main) thread, soon: for what needs GPUI's
 /// app where only a surface is at hand (the clipboard, closing a window).
 pub(crate) fn on_app(f: impl FnOnce(&mut App) + 'static) {
