@@ -100,6 +100,8 @@ pub(crate) fn after_ms(ms: u64, f: impl FnOnce() + 'static) {
 /// Runs `f` on this (main) thread soon, outside any GPUI update: for
 /// native calls the system answers at once with callbacks into GPUI's
 /// windows (moving a window), which fail while an update holds the app.
+/// Linux moves no window (its window manager places them).
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 pub(crate) fn soon(f: impl FnOnce() + 'static) {
     let app = APP.with(|a| a.borrow().clone());
     let Some(app) = app else {
